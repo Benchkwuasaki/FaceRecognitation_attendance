@@ -1,5 +1,6 @@
 import AppLayout from '@/layouts/app-layout';
 import { Head, Link } from '@inertiajs/react';
+import type { BreadcrumbItem } from '@/types';
 
 interface Attendance {
     id: number;
@@ -22,6 +23,11 @@ interface Teacher {
 }
 
 export default function ShowTeacher({ teacher }: { teacher: Teacher }) {
+    const breadcrumbs: BreadcrumbItem[] = [
+        { title: 'Teachers', href: '/admin/teachers' },
+        { title: teacher.full_name, href: `/admin/teachers/${teacher.id}` },
+    ];
+
     const statusColor = {
         present: 'text-green-600',
         late: 'text-amber-600',
@@ -29,7 +35,7 @@ export default function ShowTeacher({ teacher }: { teacher: Teacher }) {
     };
 
     return (
-        <AppLayout>
+        <AppLayout breadcrumbs={breadcrumbs}>
             <Head title={teacher.full_name} />
             <div className="mx-auto max-w-3xl p-6">
                 <div className="mb-6 flex items-center justify-between">

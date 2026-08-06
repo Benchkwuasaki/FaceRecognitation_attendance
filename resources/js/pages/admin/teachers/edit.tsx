@@ -4,6 +4,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import InputError from '@/components/input-error';
 import { Head, useForm } from '@inertiajs/react';
+import type { BreadcrumbItem } from '@/types';
 
 interface Teacher {
     id: number;
@@ -16,6 +17,11 @@ interface Teacher {
 }
 
 export default function EditTeacher({ teacher }: { teacher: Teacher }) {
+    const breadcrumbs: BreadcrumbItem[] = [
+        { title: 'Teachers', href: '/admin/teachers' },
+        { title: 'Edit', href: `/admin/teachers/${teacher.id}/edit` },
+    ];
+
     const { data, setData, put, processing, errors } = useForm({
         employee_id: teacher.employee_id,
         full_name: teacher.full_name,
@@ -31,7 +37,7 @@ export default function EditTeacher({ teacher }: { teacher: Teacher }) {
     };
 
     return (
-        <AppLayout>
+        <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Edit Teacher" />
             <div className="mx-auto max-w-xl p-6">
                 <h1 className="mb-6 text-2xl font-semibold">Edit Teacher</h1>

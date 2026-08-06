@@ -1,6 +1,11 @@
 import AppLayout from '@/layouts/app-layout';
 import { Button } from '@/components/ui/button';
 import { Head, Link, router } from '@inertiajs/react';
+import type { BreadcrumbItem } from '@/types';
+
+const breadcrumbs: BreadcrumbItem[] = [
+    { title: 'Teachers', href: '/admin/teachers' },
+];
 
 interface Teacher {
     id: number;
@@ -19,7 +24,7 @@ export default function TeachersIndex({ teachers }: { teachers: Teacher[] }) {
     };
 
     return (
-        <AppLayout>
+        <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Teachers" />
             <div className="p-6">
                 <div className="mb-6 flex items-center justify-between">
@@ -29,8 +34,8 @@ export default function TeachersIndex({ teachers }: { teachers: Teacher[] }) {
                     </Link>
                 </div>
 
-                <div className="overflow-hidden rounded-lg border">
-                    <table className="w-full text-sm">
+                <div className="overflow-x-auto rounded-lg border">
+                    <table className="w-full min-w-[700px] text-sm">
                         <thead className="bg-muted text-left">
                             <tr>
                                 <th className="p-3">Employee ID</th>
@@ -41,6 +46,13 @@ export default function TeachersIndex({ teachers }: { teachers: Teacher[] }) {
                             </tr>
                         </thead>
                         <tbody>
+                            {teachers.length === 0 && (
+                                <tr>
+                                    <td colSpan={5} className="p-6 text-center text-muted-foreground">
+                                        Wala pang naka-register na teacher.
+                                    </td>
+                                </tr>
+                            )}
                             {teachers.map((teacher) => (
                                 <tr key={teacher.id} className="border-t">
                                     <td className="p-3">{teacher.employee_id}</td>
@@ -53,7 +65,7 @@ export default function TeachersIndex({ teachers }: { teachers: Teacher[] }) {
                                             <span className="text-amber-600">Not registered</span>
                                         )}
                                     </td>
-                                    <td className="p-3 space-x-2">
+                                    <td className="p-3 space-x-3 whitespace-nowrap">
                                         <Link href={`/admin/teachers/${teacher.id}`} className="text-blue-600 hover:underline">
                                             View
                                         </Link>

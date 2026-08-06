@@ -4,6 +4,12 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import InputError from '@/components/input-error';
 import { Head, useForm } from '@inertiajs/react';
+import type { BreadcrumbItem } from '@/types';
+
+const breadcrumbs: BreadcrumbItem[] = [
+    { title: 'Teachers', href: '/admin/teachers' },
+    { title: 'Add Teacher', href: '/admin/teachers/create' },
+];
 
 export default function CreateTeacher() {
     const { data, setData, post, processing, errors } = useForm({
@@ -21,7 +27,7 @@ export default function CreateTeacher() {
     };
 
     return (
-        <AppLayout>
+        <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Add Teacher" />
             <div className="mx-auto max-w-xl p-6">
                 <h1 className="mb-6 text-2xl font-semibold">Add Teacher</h1>

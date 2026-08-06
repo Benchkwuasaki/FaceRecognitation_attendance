@@ -2,6 +2,7 @@ import AppLayout from '@/layouts/app-layout';
 import { Button } from '@/components/ui/button';
 import { Head, Link, router } from '@inertiajs/react';
 import type { BreadcrumbItem } from '@/types';
+import type { ReactNode } from 'react';
 
 const breadcrumbs: BreadcrumbItem[] = [
     { title: 'Teachers', href: '/admin/teachers' },
@@ -16,7 +17,7 @@ interface Teacher {
     face_encoding: { id: number } | null;
 }
 
-export default function TeachersIndex({ teachers }: { teachers: Teacher[] }) {
+function TeachersIndex({ teachers }: { teachers: Teacher[] }) {
     const handleDelete = (id: number) => {
         if (confirm('Sigurado ka bang gusto mong tanggalin ang teacher na ito?')) {
             router.delete(`/admin/teachers/${id}`);
@@ -24,7 +25,7 @@ export default function TeachersIndex({ teachers }: { teachers: Teacher[] }) {
     };
 
     return (
-        <AppLayout breadcrumbs={breadcrumbs}>
+        <>
             <Head title="Teachers" />
             <div className="p-6">
                 <div className="mb-6 flex items-center justify-between">
@@ -82,6 +83,10 @@ export default function TeachersIndex({ teachers }: { teachers: Teacher[] }) {
                     </table>
                 </div>
             </div>
-        </AppLayout>
+        </>
     );
 }
+
+TeachersIndex.layout = (page: ReactNode) => <AppLayout breadcrumbs={breadcrumbs}>{page}</AppLayout>;
+
+export default TeachersIndex;

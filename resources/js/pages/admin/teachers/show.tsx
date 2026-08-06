@@ -1,6 +1,7 @@
 import AppLayout from '@/layouts/app-layout';
 import { Head, Link } from '@inertiajs/react';
 import type { BreadcrumbItem } from '@/types';
+import type { ReactNode } from 'react';
 
 interface Attendance {
     id: number;
@@ -22,12 +23,7 @@ interface Teacher {
     attendances: Attendance[];
 }
 
-export default function ShowTeacher({ teacher }: { teacher: Teacher }) {
-    const breadcrumbs: BreadcrumbItem[] = [
-        { title: 'Teachers', href: '/admin/teachers' },
-        { title: teacher.full_name, href: `/admin/teachers/${teacher.id}` },
-    ];
-
+function ShowTeacher({ teacher }: { teacher: Teacher }) {
     const statusColor = {
         present: 'text-green-600',
         late: 'text-amber-600',
@@ -35,7 +31,7 @@ export default function ShowTeacher({ teacher }: { teacher: Teacher }) {
     };
 
     return (
-        <AppLayout breadcrumbs={breadcrumbs}>
+        <>
             <Head title={teacher.full_name} />
             <div className="mx-auto max-w-3xl p-6">
                 <div className="mb-6 flex items-center justify-between">
@@ -62,8 +58,8 @@ export default function ShowTeacher({ teacher }: { teacher: Teacher }) {
                 </div>
 
                 <h2 className="mb-3 text-lg font-semibold">Attendance History</h2>
-                <div className="overflow-hidden rounded-lg border">
-                    <table className="w-full text-sm">
+                <div className="overflow-x-auto rounded-lg border">
+                    <table className="w-full min-w-[500px] text-sm">
                         <thead className="bg-muted text-left">
                             <tr>
                                 <th className="p-3">Date</th>
@@ -92,6 +88,17 @@ export default function ShowTeacher({ teacher }: { teacher: Teacher }) {
                     </table>
                 </div>
             </div>
-        </AppLayout>
+        </>
     );
 }
+
+ShowTeacher.layout = (page: ReactNode) => {
+    const teacher = (page.props as { teacher: Teacher }).teacher;
+    const breadcrumbs: BreadcrumbItem[] = [
+        { title: 'Teachers', href: '/admin/teachers' },
+        { title: teacher.full_name, href: `/admin/teachers/${teacher.id}` },
+    ];
+    return <AppLayout breadcrumbs={breadcrumbs}>{page}</AppLayout>;
+};
+
+export default ShowTeacher;

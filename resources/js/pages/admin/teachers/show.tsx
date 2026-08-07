@@ -1,5 +1,5 @@
 import AppLayout from '@/layouts/app-layout';
-import { Head, Link } from '@inertiajs/react';
+import { Head, Link, usePage } from '@inertiajs/react';
 import type { BreadcrumbItem } from '@/types';
 import type { ReactNode } from 'react';
 
@@ -24,11 +24,6 @@ interface Teacher {
 }
 
 function ShowTeacher({ teacher }: { teacher: Teacher }) {
-    const breadcrumbs: BreadcrumbItem[] = [
-        { title: 'Teachers', href: '/admin/teachers' },
-        { title: teacher.full_name, href: `/admin/teachers/${teacher.id}` },
-    ];
-
     const statusColor = {
         present: 'text-green-600',
         late: 'text-amber-600',
@@ -36,7 +31,7 @@ function ShowTeacher({ teacher }: { teacher: Teacher }) {
     };
 
     return (
-        <AppLayout breadcrumbs={breadcrumbs}>
+        <>
             <Head title={teacher.full_name} />
             <div className="mx-auto max-w-3xl p-6">
                 <div className="mb-6 flex items-center justify-between">
@@ -93,13 +88,25 @@ function ShowTeacher({ teacher }: { teacher: Teacher }) {
                     </table>
                 </div>
             </div>
-        </AppLayout>
+        </>
     );
 }
 
-// Component already renders AppLayout itself above (needs `teacher` for dynamic
-// breadcrumbs, which a static .layout can't easily access). This no-op stops
-// app.tsx's default-layout fallback from wrapping it in a second AppLayout.
-ShowTeacher.layout = (page: ReactNode) => page;
+// Wraps the page in AppLayout with dynamic breadcrumbs. Reads props via
+// usePage() instead of the `page` argument, since that argument's shape
+// isn't reliable to destructure directly in this Inertia setup. Because
+// this static .layout is defined, it REPLACES (not stacks with) the
+// default AppLayout that app.tsx's `layout:` resolver would otherwise
+// apply — so there's only ever one AppLayout render.
+function ShowTeacherLayout({ children }: { children: ReactNode }) {
+    const { teacher } = usePage<{ teacher: Teacher }>().props;
+    const breadcrumbs: BreadcrumbItem[] = [
+        { title: 'Teachers', href: '/admin/teachers' },
+        { title: teacher.full_name, href: `/admin/teachers/${teacher.id}` },
+    ];
+    return <AppLayout breadcrumbs={breadcrumbs}>{children}</AppLayout>;
+}
+
+ShowTeacher.layout = (page: ReactNode) => <ShowTeacherLayout>{page}</ShowTeacherLayout>;
 
 export default ShowTeacher;

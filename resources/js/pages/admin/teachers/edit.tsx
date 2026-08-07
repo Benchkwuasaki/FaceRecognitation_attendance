@@ -3,7 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import InputError from '@/components/input-error';
-import { Head, useForm } from '@inertiajs/react';
+import { Head, useForm, usePage } from '@inertiajs/react';
 import type { BreadcrumbItem } from '@/types';
 import type { ReactNode } from 'react';
 
@@ -18,11 +18,6 @@ interface Teacher {
 }
 
 function EditTeacher({ teacher }: { teacher: Teacher }) {
-    const breadcrumbs: BreadcrumbItem[] = [
-        { title: 'Teachers', href: '/admin/teachers' },
-        { title: 'Edit', href: `/admin/teachers/${teacher.id}/edit` },
-    ];
-
     const { data, setData, put, processing, errors } = useForm({
         employee_id: teacher.employee_id,
         full_name: teacher.full_name,
@@ -38,7 +33,7 @@ function EditTeacher({ teacher }: { teacher: Teacher }) {
     };
 
     return (
-        <AppLayout breadcrumbs={breadcrumbs}>
+        <>
             <Head title="Edit Teacher" />
             <div className="mx-auto max-w-xl p-6">
                 <h1 className="mb-6 text-2xl font-semibold">Edit Teacher</h1>
@@ -85,13 +80,25 @@ function EditTeacher({ teacher }: { teacher: Teacher }) {
                     </Button>
                 </form>
             </div>
-        </AppLayout>
+        </>
     );
 }
 
-// Component already renders AppLayout itself above (needs `teacher` for dynamic
-// breadcrumbs, which a static .layout can't easily access). This no-op stops
-// app.tsx's default-layout fallback from wrapping it in a second AppLayout.
-EditTeacher.layout = (page: ReactNode) => page;
+// Wraps the page in AppLayout with dynamic breadcrumbs. Reads props via
+// usePage() instead of the `page` argument, since that argument's shape
+// isn't reliable to destructure directly in this Inertia setup. Because
+// this static .layout is defined, it REPLACES (not stacks with) the
+// default AppLayout that app.tsx's `layout:` resolver would otherwise
+// apply — so there's only ever one AppLayout render.
+function EditTeacherLayout({ children }: { children: ReactNode }) {
+    const { teacher } = usePage<{ teacher: Teacher }>().props;
+    const breadcrumbs: BreadcrumbItem[] = [
+        { title: 'Teachers', href: '/admin/teachers' },
+        { title: 'Edit', href: `/admin/teachers/${teacher.id}/edit` },
+    ];
+    return <AppLayout breadcrumbs={breadcrumbs}>{children}</AppLayout>;
+}
+
+EditTeacher.layout = (page: ReactNode) => <EditTeacherLayout>{page}</EditTeacherLayout>;
 
 export default EditTeacher;

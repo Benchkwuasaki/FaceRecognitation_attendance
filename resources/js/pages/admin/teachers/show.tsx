@@ -1,5 +1,34 @@
 import AppLayout from '@/layouts/app-layout';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import {
+    Card,
+    CardContent,
+    CardHeader,
+    CardTitle,
+} from '@/components/ui/card';
+import { Separator } from '@/components/ui/separator';
+import {
+    Table,
+    TableBody,
+    TableCell,
+    TableHead,
+    TableHeader,
+    TableRow,
+} from '@/components/ui/table';
 import { Head, Link, usePage } from '@inertiajs/react';
+import {
+    Building2,
+    CalendarDays,
+    CheckCircle2,
+    Clock,
+    Mail,
+    MapPin,
+    Pencil,
+    Phone,
+    ScanFace,
+    XCircle,
+} from 'lucide-react';
 import type { BreadcrumbItem } from '@/types';
 import type { ReactNode } from 'react';
 
@@ -23,70 +52,124 @@ interface Teacher {
     attendances: Attendance[];
 }
 
-function ShowTeacher({ teacher }: { teacher: Teacher }) {
-    const statusColor = {
-        present: 'text-green-600',
-        late: 'text-amber-600',
-        absent: 'text-red-600',
-    };
+const statusVariant: Record<Attendance['status'], 'default' | 'secondary' | 'destructive'> = {
+    present: 'default',
+    late: 'secondary',
+    absent: 'destructive',
+};
 
+function InfoRow({
+    icon: Icon,
+    label,
+    value,
+}: {
+    icon: React.ElementType;
+    label: string;
+    value: ReactNode;
+}) {
+    return (
+        <div className="flex items-start gap-3">
+            <Icon className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" />
+            <div className="min-w-0">
+                <p className="text-xs text-muted-foreground">{label}</p>
+                <p className="truncate text-sm font-medium">{value}</p>
+            </div>
+        </div>
+    );
+}
+
+function ShowTeacher({ teacher }: { teacher: Teacher }) {
     return (
         <>
             <Head title={teacher.full_name} />
-            <div className="mx-auto max-w-3xl p-6">
-                <div className="mb-6 flex items-center justify-between">
-                    <h1 className="text-2xl font-semibold">{teacher.full_name}</h1>
-                    <Link href={`/admin/teachers/${teacher.id}/edit`} className="text-blue-600 hover:underline">
-                        Edit
-                    </Link>
-                </div>
-
-                <div className="mb-8 grid grid-cols-2 gap-4 rounded-lg border p-4 text-sm">
-                    <div><span className="text-muted-foreground">Employee ID:</span> {teacher.employee_id}</div>
-                    <div><span className="text-muted-foreground">Department:</span> {teacher.department ?? '—'}</div>
-                    <div><span className="text-muted-foreground">Email:</span> {teacher.email}</div>
-                    <div><span className="text-muted-foreground">Contact:</span> {teacher.contact_number ?? '—'}</div>
-                    <div className="col-span-2"><span className="text-muted-foreground">Address:</span> {teacher.address ?? '—'}</div>
-                    <div className="col-span-2">
-                        <span className="text-muted-foreground">Face Registration:</span>{' '}
-                        {teacher.face_encoding ? (
-                            <span className="text-green-600">✔ Registered</span>
-                        ) : (
-                            <span className="text-amber-600">Not yet registered</span>
-                        )}
+            <div className="w-full space-y-6 p-6">
+                <div className="flex items-center justify-between">
+                    <div>
+                        <h1 className="text-2xl font-semibold tracking-tight">{teacher.full_name}</h1>
+                        <p className="text-sm text-muted-foreground">Employee ID: {teacher.employee_id}</p>
                     </div>
+                    <Button asChild>
+                        <Link href={`/admin/teachers/${teacher.id}/edit`}>
+                            <Pencil className="h-4 w-4" />
+                            Edit Teacher
+                        </Link>
+                    </Button>
                 </div>
 
-                <h2 className="mb-3 text-lg font-semibold">Attendance History</h2>
-                <div className="overflow-x-auto rounded-lg border">
-                    <table className="w-full min-w-[500px] text-sm">
-                        <thead className="bg-muted text-left">
-                            <tr>
-                                <th className="p-3">Date</th>
-                                <th className="p-3">Time In</th>
-                                <th className="p-3">Time Out</th>
-                                <th className="p-3">Status</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {teacher.attendances.length === 0 && (
-                                <tr>
-                                    <td colSpan={4} className="p-3 text-center text-muted-foreground">
-                                        Wala pang attendance record.
-                                    </td>
-                                </tr>
+                <Card>
+                    <CardHeader>
+                        <CardTitle className="text-base">Teacher Information</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
+                            <InfoRow icon={Building2} label="Department" value={teacher.department ?? '—'} />
+                            <InfoRow icon={Mail} label="Email" value={teacher.email} />
+                            <InfoRow icon={Phone} label="Contact Number" value={teacher.contact_number ?? '—'} />
+                            <InfoRow icon={MapPin} label="Address" value={teacher.address ?? '—'} />
+                        </div>
+
+                        <Separator className="my-6" />
+
+                        <div className="flex items-center gap-3">
+                            <ScanFace className="h-4 w-4 text-muted-foreground" />
+                            <span className="text-sm text-muted-foreground">Face Registration:</span>
+                            {teacher.face_encoding ? (
+                                <Badge className="gap-1 bg-green-600 hover:bg-green-600">
+                                    <CheckCircle2 className="h-3 w-3" />
+                                    Registered
+                                </Badge>
+                            ) : (
+                                <Badge variant="outline" className="gap-1 text-amber-600">
+                                    <XCircle className="h-3 w-3" />
+                                    Not yet registered
+                                </Badge>
                             )}
-                            {teacher.attendances.map((att) => (
-                                <tr key={att.id} className="border-t">
-                                    <td className="p-3">{att.date}</td>
-                                    <td className="p-3">{att.time_in ?? '—'}</td>
-                                    <td className="p-3">{att.time_out ?? '—'}</td>
-                                    <td className={`p-3 font-medium capitalize ${statusColor[att.status]}`}>{att.status}</td>
-                                </tr>
-                            ))}
-                        </tbody>
-                    </table>
-                </div>
+                        </div>
+                    </CardContent>
+                </Card>
+
+                <Card>
+                    <CardHeader>
+                        <CardTitle className="flex items-center gap-2 text-base">
+                            <CalendarDays className="h-4 w-4" />
+                            Attendance History
+                        </CardTitle>
+                    </CardHeader>
+                    <CardContent className="p-0">
+                        <Table>
+                            <TableHeader>
+                                <TableRow>
+                                    <TableHead>Date</TableHead>
+                                    <TableHead>Time In</TableHead>
+                                    <TableHead>Time Out</TableHead>
+                                    <TableHead>Status</TableHead>
+                                </TableRow>
+                            </TableHeader>
+                            <TableBody>
+                                {teacher.attendances.length === 0 && (
+                                    <TableRow>
+                                        <TableCell colSpan={4} className="py-8 text-center text-muted-foreground">
+                                            <Clock className="mx-auto mb-2 h-5 w-5" />
+                                            Wala pang attendance record.
+                                        </TableCell>
+                                    </TableRow>
+                                )}
+                                {teacher.attendances.map((att) => (
+                                    <TableRow key={att.id}>
+                                        <TableCell>{att.date}</TableCell>
+                                        <TableCell>{att.time_in ?? '—'}</TableCell>
+                                        <TableCell>{att.time_out ?? '—'}</TableCell>
+                                        <TableCell>
+                                            <Badge variant={statusVariant[att.status]} className="capitalize">
+                                                {att.status}
+                                            </Badge>
+                                        </TableCell>
+                                    </TableRow>
+                                ))}
+                            </TableBody>
+                        </Table>
+                    </CardContent>
+                </Card>
             </div>
         </>
     );

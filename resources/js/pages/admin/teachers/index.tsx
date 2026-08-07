@@ -1,4 +1,14 @@
 import AppLayout from '@/layouts/app-layout';
+import {
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Head, Link, router } from '@inertiajs/react';
@@ -20,8 +30,14 @@ interface Teacher {
     face_encoding: { id: number } | null;
 }
 
+// What the delete-confirmation dialog is currently targeting.
+// `null` = closed. A single teacher = row delete. `'bulk'` = bulk delete of selectedIds.
+type DeleteTarget = Teacher | 'bulk' | null;
+
 function TeachersIndex({ teachers }: { teachers: Teacher[] }) {
     const [selectedIds, setSelectedIds] = useState<number[]>([]);
+    const [deleteTarget, setDeleteTarget] = useState<DeleteTarget>(null);
+    const [isDeleting, setIsDeleting] = useState(false);
 
     const allSelected = teachers.length > 0 && selectedIds.length === teachers.length;
     const someSelected = selectedIds.length > 0 && !allSelected;
@@ -38,27 +54,48 @@ function TeachersIndex({ teachers }: { teachers: Teacher[] }) {
         );
     };
 
-    const handleDelete = (id: number) => {
-        if (confirm('Sigurado ka bang gusto mong tanggalin ang teacher na ito?')) {
-            router.delete(`/admin/teachers/${id}`);
-        }
+    const closeDialog = () => {
+        if (isDeleting) return;
+        setDeleteTarget(null);
     };
 
-    const handleBulkDelete = () => {
-        if (selectedIds.length === 0) return;
+    const confirmDelete = () => {
+        if (!deleteTarget) return;
+        setIsDeleting(true);
 
-        const confirmMessage =
-            selectedIds.length === 1
-                ? 'Sigurado ka bang gusto mong tanggalin ang teacher na ito?'
-                : `Sigurado ka bang gusto mong tanggalin ang ${selectedIds.length} na teachers?`;
-
-        if (confirm(confirmMessage)) {
+        if (deleteTarget === 'bulk') {
             router.delete('/admin/teachers/bulk-delete', {
                 data: { ids: selectedIds },
                 onSuccess: () => setSelectedIds([]),
+                onFinish: () => {
+                    setIsDeleting(false);
+                    setDeleteTarget(null);
+                },
+            });
+        } else {
+            router.delete(`/admin/teachers/${deleteTarget.id}`, {
+                onFinish: () => {
+                    setIsDeleting(false);
+                    setDeleteTarget(null);
+                },
             });
         }
     };
+
+    const dialogCopy =
+        deleteTarget === 'bulk'
+            ? {
+                  title: `Delete ${selectedIds.length} teacher${selectedIds.length > 1 ? 's' : ''}?`,
+                  description:
+                      'This will permanently remove the selected teachers and their records. This action cannot be undone.',
+              }
+            : deleteTarget
+              ? {
+                    title: `Delete ${deleteTarget.full_name}?`,
+                    description:
+                        'This will permanently remove this teacher and their records. This action cannot be undone.',
+                }
+              : { title: '', description: '' };
 
     return (
         <>
@@ -80,7 +117,7 @@ function TeachersIndex({ teachers }: { teachers: Teacher[] }) {
                             <Button variant="ghost" size="sm" onClick={() => setSelectedIds([])}>
                                 Clear
                             </Button>
-                            <Button variant="destructive" size="sm" onClick={handleBulkDelete}>
+                            <Button variant="destructive" size="sm" onClick={() => setDeleteTarget('bulk')}>
                                 <Trash2 className="h-4 w-4" />
                                 Delete Selected
                             </Button>
@@ -140,7 +177,10 @@ function TeachersIndex({ teachers }: { teachers: Teacher[] }) {
                                         <Link href={`/admin/teachers/${teacher.id}/edit`} className="text-blue-600 hover:underline">
                                             Edit
                                         </Link>
-                                        <button onClick={() => handleDelete(teacher.id)} className="text-red-600 hover:underline">
+                                        <button
+                                            onClick={() => setDeleteTarget(teacher)}
+                                            className="text-red-600 hover:underline"
+                                        >
                                             Delete
                                         </button>
                                     </td>
@@ -150,6 +190,25 @@ function TeachersIndex({ teachers }: { teachers: Teacher[] }) {
                     </table>
                 </div>
             </div>
+
+            <AlertDialog open={deleteTarget !== null} onOpenChange={(open) => !open && closeDialog()}>
+                <AlertDialogContent>
+                    <AlertDialogHeader>
+                        <AlertDialogTitle>{dialogCopy.title}</AlertDialogTitle>
+                        <AlertDialogDescription>{dialogCopy.description}</AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                        <AlertDialogCancel disabled={isDeleting}>Cancel</AlertDialogCancel>
+                        <AlertDialogAction
+                            onClick={confirmDelete}
+                            disabled={isDeleting}
+                            className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                        >
+                            {isDeleting ? 'Deleting...' : 'Delete'}
+                        </AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
         </>
     );
 }

@@ -39,10 +39,26 @@ class TeacherController extends Controller
             'address' => 'nullable|string',
         ]);
 
-        // employee_id is always generated server-side, never trusted from the request
-        $validated['employee_id'] = $this->generateEmployeeId();
+        // employee_id is always generated server-side, never trusted from the request.
+        // Retry a few times in case two requests race and collide on the same ID.
+        $attempts = 0;
 
-        Teacher::create($validated);
+        while (true) {
+            try {
+                DB::transaction(function () use (&$validated) {
+                    $validated['employee_id'] = $this->generateEmployeeId();
+                    Teacher::create($validated);
+                });
+
+                break;
+            } catch (UniqueConstraintViolationException $e) {
+                $attempts++;
+
+                if ($attempts >= 5) {
+                    throw $e;
+                }
+            }
+        }
 
         return redirect()->route('admin.teachers.index')
             ->with('success', 'Teacher added successfully.');
@@ -85,7 +101,7 @@ class TeacherController extends Controller
 
     public function destroy(Teacher $teacher)
     {
-        $teacher->delete();
+        $teacher->forceDelete();
 
         return redirect()->route('admin.teachers.index')
             ->with('success', 'Teacher removed successfully.');
@@ -101,7 +117,7 @@ class TeacherController extends Controller
             'ids.*' => 'integer|exists:teachers,id',
         ]);
 
-        $count = Teacher::whereIn('id', $validated['ids'])->delete();
+        $count = Teacher::whereIn('id', $validated['ids'])->get()->each->forceDelete()->count();
 
         return redirect()->route('admin.teachers.index')
             ->with('success', "{$count} teacher(s) removed successfully.");
@@ -114,8 +130,10 @@ class TeacherController extends Controller
     {
         $prefix = 'DepEd-';
 
-        $lastNumber = Teacher::where('employee_id', 'like', "{$prefix}%")
+        $lastNumber = Teacher::withTrashed()
+            ->where('employee_id', 'like', "{$prefix}%")
             ->selectRaw('MAX(CAST(SUBSTRING(employee_id, ?) AS UNSIGNED)) as max_num', [strlen($prefix) + 1])
+            ->lockForUpdate()
             ->value('max_num');
 
         $nextNumber = ($lastNumber ?? 0) + 1;

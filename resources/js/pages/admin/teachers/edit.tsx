@@ -5,6 +5,7 @@ import { Label } from '@/components/ui/label';
 import InputError from '@/components/input-error';
 import { Head, useForm } from '@inertiajs/react';
 import type { BreadcrumbItem } from '@/types';
+import type { ReactNode } from 'react';
 
 interface Teacher {
     id: number;
@@ -87,5 +88,10 @@ function EditTeacher({ teacher }: { teacher: Teacher }) {
         </AppLayout>
     );
 }
+
+// Component already renders AppLayout itself above (needs `teacher` for dynamic
+// breadcrumbs, which a static .layout can't easily access). This no-op stops
+// app.tsx's default-layout fallback from wrapping it in a second AppLayout.
+EditTeacher.layout = (page: ReactNode) => page;
 
 export default EditTeacher;

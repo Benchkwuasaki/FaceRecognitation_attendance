@@ -1,6 +1,7 @@
 import AppLayout from '@/layouts/app-layout';
 import { Head, Link } from '@inertiajs/react';
 import type { BreadcrumbItem } from '@/types';
+import type { ReactNode } from 'react';
 
 interface Attendance {
     id: number;
@@ -95,5 +96,10 @@ function ShowTeacher({ teacher }: { teacher: Teacher }) {
         </AppLayout>
     );
 }
+
+// Component already renders AppLayout itself above (needs `teacher` for dynamic
+// breadcrumbs, which a static .layout can't easily access). This no-op stops
+// app.tsx's default-layout fallback from wrapping it in a second AppLayout.
+ShowTeacher.layout = (page: ReactNode) => page;
 
 export default ShowTeacher;

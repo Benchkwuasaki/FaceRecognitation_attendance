@@ -28,9 +28,9 @@ const breadcrumbs: BreadcrumbItem[] = [
     { title: 'Add Teacher', href: '/admin/teachers/create' },
 ];
 
-function CreateTeacher() {
+function CreateTeacher({ employeeId }: { employeeId: string }) {
     const { data, setData, post, processing, errors } = useForm({
-        employee_id: '',
+        employee_id: employeeId,
         full_name: '',
         department: '',
         contact_number: '',
@@ -64,7 +64,14 @@ function CreateTeacher() {
                                         <IdCard className="h-3.5 w-3.5 text-muted-foreground" />
                                         Employee ID
                                     </Label>
-                                    <Input id="employee_id" value={data.employee_id} onChange={(e) => setData('employee_id', e.target.value)} />
+                                    <Input
+                                        id="employee_id"
+                                        value={data.employee_id}
+                                        disabled
+                                        readOnly
+                                        className="cursor-not-allowed bg-muted text-muted-foreground"
+                                    />
+                                    <p className="text-xs text-muted-foreground">Auto-generated, cannot be edited.</p>
                                     <InputError message={errors.employee_id} />
                                 </div>
 

@@ -1,6 +1,9 @@
 import AppLayout from '@/layouts/app-layout';
 import { Button } from '@/components/ui/button';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Head, Link, router } from '@inertiajs/react';
+import { Trash2 } from 'lucide-react';
+import { useMemo, useState } from 'react';
 import type { BreadcrumbItem } from '@/types';
 import type { ReactNode } from 'react';
 
@@ -18,9 +21,42 @@ interface Teacher {
 }
 
 function TeachersIndex({ teachers }: { teachers: Teacher[] }) {
+    const [selectedIds, setSelectedIds] = useState<number[]>([]);
+
+    const allSelected = teachers.length > 0 && selectedIds.length === teachers.length;
+    const someSelected = selectedIds.length > 0 && !allSelected;
+
+    const selectedSet = useMemo(() => new Set(selectedIds), [selectedIds]);
+
+    const toggleAll = () => {
+        setSelectedIds(allSelected ? [] : teachers.map((t) => t.id));
+    };
+
+    const toggleOne = (id: number) => {
+        setSelectedIds((prev) =>
+            prev.includes(id) ? prev.filter((selectedId) => selectedId !== id) : [...prev, id]
+        );
+    };
+
     const handleDelete = (id: number) => {
         if (confirm('Sigurado ka bang gusto mong tanggalin ang teacher na ito?')) {
             router.delete(`/admin/teachers/${id}`);
+        }
+    };
+
+    const handleBulkDelete = () => {
+        if (selectedIds.length === 0) return;
+
+        const confirmMessage =
+            selectedIds.length === 1
+                ? 'Sigurado ka bang gusto mong tanggalin ang teacher na ito?'
+                : `Sigurado ka bang gusto mong tanggalin ang ${selectedIds.length} na teachers?`;
+
+        if (confirm(confirmMessage)) {
+            router.delete('/admin/teachers/bulk-delete', {
+                data: { ids: selectedIds },
+                onSuccess: () => setSelectedIds([]),
+            });
         }
     };
 
@@ -35,10 +71,34 @@ function TeachersIndex({ teachers }: { teachers: Teacher[] }) {
                     </Link>
                 </div>
 
+                {selectedIds.length > 0 && (
+                    <div className="mb-4 flex items-center justify-between rounded-lg border bg-muted/50 px-4 py-2.5">
+                        <span className="text-sm font-medium">
+                            {selectedIds.length} teacher{selectedIds.length > 1 ? 's' : ''} selected
+                        </span>
+                        <div className="flex items-center gap-2">
+                            <Button variant="ghost" size="sm" onClick={() => setSelectedIds([])}>
+                                Clear
+                            </Button>
+                            <Button variant="destructive" size="sm" onClick={handleBulkDelete}>
+                                <Trash2 className="h-4 w-4" />
+                                Delete Selected
+                            </Button>
+                        </div>
+                    </div>
+                )}
+
                 <div className="overflow-x-auto rounded-lg border">
                     <table className="w-full min-w-[700px] text-sm">
                         <thead className="bg-muted text-left">
                             <tr>
+                                <th className="w-10 p-3">
+                                    <Checkbox
+                                        checked={allSelected ? true : someSelected ? 'indeterminate' : false}
+                                        onCheckedChange={toggleAll}
+                                        aria-label="Select all teachers"
+                                    />
+                                </th>
                                 <th className="p-3">Employee ID</th>
                                 <th className="p-3">Name</th>
                                 <th className="p-3">Department</th>
@@ -49,13 +109,20 @@ function TeachersIndex({ teachers }: { teachers: Teacher[] }) {
                         <tbody>
                             {teachers.length === 0 && (
                                 <tr>
-                                    <td colSpan={5} className="p-6 text-center text-muted-foreground">
+                                    <td colSpan={6} className="p-6 text-center text-muted-foreground">
                                         Wala pang naka-register na teacher.
                                     </td>
                                 </tr>
                             )}
                             {teachers.map((teacher) => (
                                 <tr key={teacher.id} className="border-t">
+                                    <td className="p-3">
+                                        <Checkbox
+                                            checked={selectedSet.has(teacher.id)}
+                                            onCheckedChange={() => toggleOne(teacher.id)}
+                                            aria-label={`Select ${teacher.full_name}`}
+                                        />
+                                    </td>
                                     <td className="p-3">{teacher.employee_id}</td>
                                     <td className="p-3">{teacher.full_name}</td>
                                     <td className="p-3">{teacher.department ?? '—'}</td>

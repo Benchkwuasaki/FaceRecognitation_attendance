@@ -22,19 +22,23 @@ class TeacherController extends Controller
 
     public function create()
     {
-        return Inertia::render('admin/teachers/create');
+        return Inertia::render('admin/teachers/create', [
+            'employeeId' => $this->generateEmployeeId(),
+        ]);
     }
 
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'employee_id' => 'required|string|unique:teachers,employee_id',
             'full_name' => 'required|string|max:255',
             'department' => 'nullable|string|max:255',
             'contact_number' => 'nullable|string|max:20',
             'email' => 'required|email|unique:teachers,email',
             'address' => 'nullable|string',
         ]);
+
+        // employee_id is always generated server-side, never trusted from the request
+        $validated['employee_id'] = $this->generateEmployeeId();
 
         Teacher::create($validated);
 
@@ -83,5 +87,37 @@ class TeacherController extends Controller
 
         return redirect()->route('admin.teachers.index')
             ->with('success', 'Teacher removed successfully.');
+    }
+
+    /**
+     * Delete multiple teachers at once. Expects { ids: number[] } in the request body.
+     */
+    public function bulkDestroy(Request $request)
+    {
+        $validated = $request->validate([
+            'ids' => 'required|array|min:1',
+            'ids.*' => 'integer|exists:teachers,id',
+        ]);
+
+        $count = Teacher::whereIn('id', $validated['ids'])->delete();
+
+        return redirect()->route('admin.teachers.index')
+            ->with('success', "{$count} teacher(s) removed successfully.");
+    }
+
+    /**
+     * Generate the next sequential employee ID in the format DepEd-0001.
+     */
+    private function generateEmployeeId(): string
+    {
+        $prefix = 'DepEd-';
+
+        $lastNumber = Teacher::where('employee_id', 'like', "{$prefix}%")
+            ->selectRaw('MAX(CAST(SUBSTRING(employee_id, ?) AS UNSIGNED)) as max_num', [strlen($prefix) + 1])
+            ->value('max_num');
+
+        $nextNumber = ($lastNumber ?? 0) + 1;
+
+        return $prefix . str_pad((string) $nextNumber, 4, '0', STR_PAD_LEFT);
     }
 }

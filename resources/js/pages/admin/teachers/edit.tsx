@@ -5,7 +5,6 @@ import { Label } from '@/components/ui/label';
 import InputError from '@/components/input-error';
 import { Head, useForm } from '@inertiajs/react';
 import type { BreadcrumbItem } from '@/types';
-import type { ReactNode } from 'react';
 
 interface Teacher {
     id: number;
@@ -18,6 +17,11 @@ interface Teacher {
 }
 
 function EditTeacher({ teacher }: { teacher: Teacher }) {
+    const breadcrumbs: BreadcrumbItem[] = [
+        { title: 'Teachers', href: '/admin/teachers' },
+        { title: 'Edit', href: `/admin/teachers/${teacher.id}/edit` },
+    ];
+
     const { data, setData, put, processing, errors } = useForm({
         employee_id: teacher.employee_id,
         full_name: teacher.full_name,
@@ -33,7 +37,7 @@ function EditTeacher({ teacher }: { teacher: Teacher }) {
     };
 
     return (
-        <>
+        <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Edit Teacher" />
             <div className="mx-auto max-w-xl p-6">
                 <h1 className="mb-6 text-2xl font-semibold">Edit Teacher</h1>
@@ -80,17 +84,8 @@ function EditTeacher({ teacher }: { teacher: Teacher }) {
                     </Button>
                 </form>
             </div>
-        </>
+        </AppLayout>
     );
 }
-
-EditTeacher.layout = (page: ReactNode) => {
-    const teacher = (page.props as { teacher: Teacher }).teacher;
-    const breadcrumbs: BreadcrumbItem[] = [
-        { title: 'Teachers', href: '/admin/teachers' },
-        { title: 'Edit', href: `/admin/teachers/${teacher.id}/edit` },
-    ];
-    return <AppLayout breadcrumbs={breadcrumbs}>{page}</AppLayout>;
-};
 
 export default EditTeacher;

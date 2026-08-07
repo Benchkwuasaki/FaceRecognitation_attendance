@@ -1,7 +1,6 @@
 import AppLayout from '@/layouts/app-layout';
 import { Head, Link } from '@inertiajs/react';
 import type { BreadcrumbItem } from '@/types';
-import type { ReactNode } from 'react';
 
 interface Attendance {
     id: number;
@@ -24,6 +23,11 @@ interface Teacher {
 }
 
 function ShowTeacher({ teacher }: { teacher: Teacher }) {
+    const breadcrumbs: BreadcrumbItem[] = [
+        { title: 'Teachers', href: '/admin/teachers' },
+        { title: teacher.full_name, href: `/admin/teachers/${teacher.id}` },
+    ];
+
     const statusColor = {
         present: 'text-green-600',
         late: 'text-amber-600',
@@ -31,7 +35,7 @@ function ShowTeacher({ teacher }: { teacher: Teacher }) {
     };
 
     return (
-        <>
+        <AppLayout breadcrumbs={breadcrumbs}>
             <Head title={teacher.full_name} />
             <div className="mx-auto max-w-3xl p-6">
                 <div className="mb-6 flex items-center justify-between">
@@ -88,17 +92,8 @@ function ShowTeacher({ teacher }: { teacher: Teacher }) {
                     </table>
                 </div>
             </div>
-        </>
+        </AppLayout>
     );
 }
-
-ShowTeacher.layout = (page: ReactNode) => {
-    const teacher = (page.props as { teacher: Teacher }).teacher;
-    const breadcrumbs: BreadcrumbItem[] = [
-        { title: 'Teachers', href: '/admin/teachers' },
-        { title: teacher.full_name, href: `/admin/teachers/${teacher.id}` },
-    ];
-    return <AppLayout breadcrumbs={breadcrumbs}>{page}</AppLayout>;
-};
 
 export default ShowTeacher;
